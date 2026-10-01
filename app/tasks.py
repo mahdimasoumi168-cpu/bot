@@ -6,8 +6,7 @@ celery.conf.update(task_serializer="json",accept_content=["json"],result_seriali
 @celery.task(bind=True,max_retries=5)
 def deliver_task(self,delivery_id):
     import asyncio
-    try:
-        from .processor import deliver
-        asyncio.run(deliver(delivery_id))
-    except Exception as exc:
-        raise self.retry(exc=exc,countdown=min(600,10*(2**self.request.retries)))
+    from .processor import deliver
+    ok=asyncio.run(deliver(delivery_id))
+    if not ok: raise self.retry(countdown=min(600,10*(2**self.request.retries)))
+    return True
