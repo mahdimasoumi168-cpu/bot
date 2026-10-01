@@ -18,9 +18,17 @@ def extract(msg):
 
 async def ingest(post):
     if str(post.get("chat",{}).get("id")) != str(settings.telegram_source_chat_id): return "ignored"
-    kind,file_id,filename=extract(post)
+    kind,_,_=extract(post)
     db=SessionLocal()
     try:
+        existing=db.query(Message).filter_by(source_chat_id=str(post["chat"]["id"]),source_message_id=post["message_id"]).first()
+        if existing:
+            existing.kind=kind
+            existing.media_group_id=post.get("media_group_id")
+            existing.payload_json=json.dumps(post,ensure_ascii=False)
+            db.query(Delivery).filter(Delivery.message_id==existing.id).update({"status":"PENDING","last_error":None})
+            db.commit()
+            return existing.id
         m=Message(source_chat_id=str(post["chat"]["id"]),source_message_id=post["message_id"],media_group_id=post.get("media_group_id"),kind=kind,payload_json=json.dumps(post,ensure_ascii=False))
         db.add(m); db.flush()
         for name in ADAPTERS: db.add(Delivery(message_id=m.id,destination=name))
