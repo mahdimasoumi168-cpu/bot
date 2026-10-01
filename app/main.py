@@ -13,13 +13,17 @@ app=FastAPI(title=settings.app_name)
 security=HTTPBasic()
 
 @app.on_event("startup")
-def startup(): init_db()
+def startup():
+    try: init_db()
+    except Exception: pass
 
 @app.get("/health")
-def health(): return {"ok":True,"service":settings.app_name}
+def health(): return {"ok":True,"service":settings.app_name,"database":settings.database_url.split(":")[0]}
 
 @app.post("/webhook/telegram")
 async def telegram_webhook(request:Request):
+    if settings.telegram_webhook_secret=="CONFIGURE_ME":
+        raise HTTPException(503,"Telegram webhook is not configured")
     if not secrets.compare_digest(request.headers.get("X-Telegram-Bot-Api-Secret-Token",""),settings.telegram_webhook_secret):
         raise HTTPException(401,"invalid webhook secret")
     update=await request.json()
