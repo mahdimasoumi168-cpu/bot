@@ -12,14 +12,18 @@ class Settings(BaseSettings):
     public_base_url: str = ""
     eitaa_token: str = ""
     eitaa_chat_id: str = ""
+    eitaa_enabled: bool = False
     bale_token: str = ""
     bale_chat_id: str = ""
+    bale_enabled: bool = False
     rubika_token: str = ""
     rubika_chat_id: str = ""
+    rubika_enabled: bool = False
     rubika_endpoint: str = ""
     soroush_endpoint: str = ""
     soroush_token: str = ""
     soroush_chat_id: str = ""
+    soroush_enabled: bool = False
     request_timeout: float = 45.0
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 settings = Settings()
